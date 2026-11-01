@@ -1,0 +1,110 @@
+name: ci
+# CI gate + multi-arch image publish.
+#
+# | Event                       | test job | build job                  |
+# |-----------------------------|----------|----------------------------|
+# | pull_request -> main        | runs     | builds, no push            |
+# | push -> main                | runs     | builds, pushes to GHCR     |
+# | push -> v*.*.* tag          | runs     | builds, pushes to GHCR     |
+# | workflow_dispatch           | runs     | builds, pushes to GHCR     |
+#
+# Tag scheme (set on push events; PR events build with placeholder
+# local tags and never reach GHCR):
+#   main push  -> :main, :<short-sha>, :latest
+#   v0.1.0 tag -> :v0.1.0, :v0.1, :v0, :<short-sha>
+#
+# Visibility inherits from the repo (public). GITHUB_TOKEN gets
+# `packages: write` via the workflow's permissions block; no PAT needed.
+
+on:
+  push:
+    branches: [main]
+    tags: ['v*.*.*']
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  packages: write
+
+# Cancel an in-progress run on the same ref — the previous build's
+# output is invalidated anyway, and saves CI minutes on rapid pushes.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    name: lint + typecheck + tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: astral-sh/setup-uv@v4
+        with:
+          version: 0.11.19
+
+      - run: uv sync
+      - run: uv run poe check
+
+  build:
+    name: build image
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # GHCR login only on push events — PR builds don't push anything.
+      - uses: docker/login-action@v3
+        if: github.event_name == 'push'
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      # QEMU + buildx for cross-arch builds. The runner is amd64;
+      # arm64 is built under binfmt_misc emulation. GHA's QEMU
+      # handles common Rust/Python toolchain loads better than the
+      # typical local QEMU on aarch64 dev boxes.
+      - uses: docker/setup-qemu-action@v3
+      - uses: docker/setup-buildx-action@v3
+
+      # Tag generation. Runs on every event so PR builds still get
+      # a cacheable local tag; `push: false` below keeps PR builds
+      # off GHCR.
+      - uses: docker/metadata-action@v5
+        id: meta
+        with:
+          images: ghcr.io/${{ github.repository }}
+          tags: |
+            type=ref,event=branch
+            type=ref,event=pr
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=semver,pattern={{major}}
+            type=sha,format=short
+            type=raw,value=latest,enable={{is_default_branch}}
+
+      # Multi-arch build for both linux/amd64 + linux/arm64. On PR
+      # events, `push: false` so this is a Dockerfile regression
+      # check only; on push events (main, v*.*.*, dispatch), the
+      # metadata-action tags above are applied and the result is
+      # pushed to GHCR.
+      #
+      # `cache-from: type=gha` + `cache-to: type=gha,mode=max`
+      # makes repeat builds near-instant across runs.
+      #
+      # `provenance: false` skips SLSA attestation manifests — the
+      # proxy isn't a supply-chain target and the extra entries
+      # just clutter the index.
+      - uses: docker/build-push-action@v6
+        with:
+          context: .
+          platforms: linux/amd64,linux/arm64
+          push: ${{ github.event_name == 'push' }}
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          provenance: false

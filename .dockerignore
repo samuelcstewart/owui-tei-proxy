@@ -1,0 +1,37 @@
+# Build context for the owui-tei-proxy image.
+#
+# The Dockerfile expects a multi-file project (pyproject.toml +
+# uv.lock + src/ + README.md), so the build context is the repo root.
+# Tests, dev caches, the compose file, and secrets stay out of the
+# build context to keep the image small and the build cache hot.
+
+# Build artifacts
+build/
+dist/
+*.egg-info/
+.eggs/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+.venv/
+
+# Dev-only code
+tests/
+docker-compose.yml
+.python-version
+
+# Editor / OS
+.vscode/
+.idea/
+.DS_Store
+
+# Local secrets -- never commit
+.env
+.env.*
+secrets/
+
+# Git / VCS metadata
+.git/
+.gitignore
+.github/

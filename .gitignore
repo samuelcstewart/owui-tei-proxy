@@ -1,0 +1,47 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+dist/
+*.egg-info/
+.eggs/
+
+# Virtual envs
+.venv/
+venv/
+env/
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+.coverage.*
+.tox/
+coverage.xml
+
+# Mise
+.mise/
+
+# uv
+uv.lock.bak
+
+# ruff
+.ruff_cache/
+
+# Editor
+.vscode/
+.idea/
+*.swp
+.DS_Store
+
+# Local secrets (NEVER commit)
+.env
+.env.local
+*.env
+secrets/
+
+# Docker
+.docker/

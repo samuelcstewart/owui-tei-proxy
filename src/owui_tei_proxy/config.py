@@ -51,6 +51,16 @@ class Settings(BaseSettings):
         description="Listen port hint for local (non-container) runs.",
     )
 
+    @field_validator("port", mode="before")
+    @classmethod
+    def _ignore_non_integer_port(cls, v: Any) -> Any:
+        # Kubernetes injects PORT=tcp://<svc-ip>:<port> into every pod.
+        # It is not a listen port — the Dockerfile CMD pins 8000 — so
+        # ignore non-integer values and fall back to the default.
+        if isinstance(v, str) and not v.isdigit():
+            return 8000
+        return v
+
     rerank_timeout_secs: float = Field(
         default=30.0,
         gt=0,

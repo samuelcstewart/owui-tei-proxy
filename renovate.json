@@ -10,16 +10,19 @@
       "pinDigests": true
     },
     {
-      "description": "Automerge patch/minor updates once the PR's own CI checks pass (no branch protection on these repos, so this relies on internalChecksAsSuccess + platformAutomerge)",
-      "matchUpdateTypes": ["patch", "minor"],
+      "description": "Automerge patch/minor/digest updates once the PR's own CI checks pass (no branch protection on these repos, so this relies on internalChecksAsSuccess + platformAutomerge). Applies to docker images, runtime+dev Python deps, and mise pins. Majors stay manual — except GitHub Actions, see below",
+      "matchUpdateTypes": ["patch", "minor", "digest", "pinDigest"],
       "automerge": true,
       "automergeType": "pr",
       "platformAutomerge": true
     },
     {
-      "description": "GitHub Actions updates land in one PR",
+      "description": "GitHub Actions: one PR per group, automerge ANY update (incl. majors) once CI passes",
       "matchManagers": ["github-actions"],
-      "groupName": "GitHub Actions"
+      "groupName": "GitHub Actions",
+      "automerge": true,
+      "automergeType": "pr",
+      "platformAutomerge": true
     },
     {
       "description": "uv: mise.toml tool pin + ghcr uv builder image in the Dockerfile bump together",
@@ -39,9 +42,10 @@
       "groupName": "dev dependencies"
     },
     {
-      "description": "Runtime Python deps stay individual — they change the published image, no automerge",
+      "description": "Runtime Python deps: individual PRs (they change the published image); patch/minor automerge via the global rule above, majors manual",
       "matchManagers": ["pep621"],
       "matchDepTypes": ["project.dependencies"],
+      "matchUpdateTypes": ["major"],
       "automerge": false
     },
     {

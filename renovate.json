@@ -5,7 +5,12 @@
   "internalChecksAsSuccess": true,
   "packageRules": [
     {
-      "description": "Automerge patch/minor updates once CI passes (no required checks on this repo, so automerge is gated on the PR's own status checks succeeding)",
+      "description": "Digest-pin all docker images (tag + @sha256); renovate also opens pinDigest PRs for existing tag-only refs",
+      "matchDatasources": ["docker"],
+      "pinDigests": true
+    },
+    {
+      "description": "Automerge patch/minor updates once the PR's own CI checks pass (no branch protection on these repos, so this relies on internalChecksAsSuccess + platformAutomerge)",
       "matchUpdateTypes": ["patch", "minor"],
       "automerge": true,
       "automergeType": "pr",
@@ -22,23 +27,27 @@
       "groupName": "uv"
     },
     {
-      "description": "Docker base images and compose images in one PR (excludes uv via the rule above)",
+      "description": "Remaining Docker base/compose images in one PR (uv and python excluded — they have their own groups)",
       "matchManagers": ["dockerfile", "docker-compose"],
-      "matchPackageNames": ["!uv", "!ghcr.io/astral-sh/uv"],
+      "matchPackageNames": ["!uv", "!ghcr.io/astral-sh/uv", "!python"],
       "groupName": "Docker images"
     },
     {
       "description": "Dev dependencies (pytest, ruff, ty, poe, semantic-release) in one PR",
       "matchManagers": ["pep621"],
       "matchDepTypes": ["dependency-groups"],
-      "groupName": "dev dependencies",
-      "matchUpdateTypes": ["patch", "minor", "major"]
+      "groupName": "dev dependencies"
     },
     {
-      "description": "Runtime Python deps stay individual — they affect the published image",
+      "description": "Runtime Python deps stay individual — they change the published image, no automerge",
       "matchManagers": ["pep621"],
-      "matchDepTypes": ["project.dependencies", "requires-python"],
+      "matchDepTypes": ["project.dependencies"],
       "automerge": false
+    },
+    {
+      "description": "python interpreter: docker python base image + mise python pin aligned in one PR (last — later rules win)",
+      "matchPackageNames": ["python"],
+      "groupName": "python"
     }
   ]
 }

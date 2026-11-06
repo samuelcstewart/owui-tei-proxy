@@ -1,57 +1,65 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
-  "extends": ["config:recommended"],
+  "extends": [
+    "config:recommended"
+  ],
   "prCreation": "immediate",
   "internalChecksAsSuccess": true,
+  "prHourlyLimit": 10,
   "packageRules": [
     {
       "description": "Digest-pin all docker images (tag + @sha256); renovate also opens pinDigest PRs for existing tag-only refs",
-      "matchDatasources": ["docker"],
+      "matchDatasources": [
+        "docker"
+      ],
       "pinDigests": true
     },
     {
-      "description": "Automerge patch/minor/digest updates once the PR's own CI checks pass (no branch protection on these repos, so this relies on internalChecksAsSuccess + platformAutomerge). Applies to docker images, runtime+dev Python deps, and mise pins. Majors stay manual — except GitHub Actions, see below",
-      "matchUpdateTypes": ["patch", "minor", "digest", "pinDigest"],
-      "automerge": true,
-      "automergeType": "pr",
-      "platformAutomerge": true
-    },
-    {
-      "description": "GitHub Actions: one PR per group, automerge ANY update (incl. majors) once CI passes",
-      "matchManagers": ["github-actions"],
-      "groupName": "GitHub Actions",
-      "automerge": true,
-      "automergeType": "pr",
-      "platformAutomerge": true
+      "description": "GitHub Actions updates land in one PR (automerge disabled globally)",
+      "matchManagers": [
+        "github-actions"
+      ],
+      "groupName": "GitHub Actions"
     },
     {
       "description": "uv: mise.toml tool pin + ghcr uv builder image in the Dockerfile bump together",
-      "matchPackageNames": ["uv", "astral-sh/uv", "ghcr.io/astral-sh/uv"],
+      "matchPackageNames": [
+        "uv",
+        "astral-sh/uv",
+        "ghcr.io/astral-sh/uv"
+      ],
       "groupName": "uv"
     },
     {
-      "description": "Remaining Docker base/compose images in one PR (uv and python excluded — they have their own groups)",
-      "matchManagers": ["dockerfile", "docker-compose"],
-      "matchPackageNames": ["!uv", "!ghcr.io/astral-sh/uv", "!python"],
+      "description": "Remaining Docker base/compose images in one PR (uv and python excluded \u2014 they have their own groups)",
+      "matchManagers": [
+        "dockerfile",
+        "docker-compose"
+      ],
+      "matchPackageNames": [
+        "!uv",
+        "!ghcr.io/astral-sh/uv",
+        "!python"
+      ],
       "groupName": "Docker images"
     },
     {
       "description": "Dev dependencies (pytest, ruff, ty, poe, semantic-release) in one PR",
-      "matchManagers": ["pep621"],
-      "matchDepTypes": ["dependency-groups"],
+      "matchManagers": [
+        "pep621"
+      ],
+      "matchDepTypes": [
+        "dependency-groups"
+      ],
       "groupName": "dev dependencies"
     },
     {
-      "description": "Runtime Python deps: individual PRs (they change the published image); patch/minor automerge via the global rule above, majors manual",
-      "matchManagers": ["pep621"],
-      "matchDepTypes": ["project.dependencies"],
-      "matchUpdateTypes": ["major"],
-      "automerge": false
-    },
-    {
-      "description": "python interpreter: docker python base image + mise python pin aligned in one PR (last — later rules win)",
-      "matchPackageNames": ["python"],
+      "description": "python interpreter: docker python base image + mise python pin aligned in one PR (last \u2014 later rules win)",
+      "matchPackageNames": [
+        "python"
+      ],
       "groupName": "python"
     }
-  ]
+  ],
+  "automerge": false
 }

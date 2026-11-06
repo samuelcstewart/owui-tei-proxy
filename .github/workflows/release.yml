@@ -41,6 +41,10 @@ jobs:
       - run: git config user.email "github-actions[bot]@users.noreply.github.com"
 
       - run: uv sync
-      - run: uv run semantic-release version
+      # --no-vcs-release: these repos publish container images to GHCR
+      # via ci.yml on the v*.*.* tag push — no GitHub Release object
+      # is wanted (it also keeps the job inside the GITHUB_TOKEN's
+      # core rate limit on shared runners).
+      - run: uv run semantic-release version --no-vcs-release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

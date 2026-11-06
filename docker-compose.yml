@@ -22,7 +22,7 @@
 
 services:
   tei:
-    image: ghcr.io/huggingface/text-embeddings-inference:cpu-1.8.3
+    image: ghcr.io/huggingface/text-embeddings-inference:cpu-1.8.3@sha256:8de25e75ce39617f17f2f6c77d60a4f75b65e779ed5005420eb1400072a15c1c
     container_name: owui-tei-dev-upstream
     command:
       - --model-id

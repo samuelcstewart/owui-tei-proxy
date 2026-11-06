@@ -1,0 +1,46 @@
+name: release
+
+# Semantic-release: on every push to main, python-semantic-release
+# computes the next version from the conventional commits since the
+# last v*.*.* tag, stamps it into pyproject.toml + CHANGELOG.md,
+# commits ("chore(release): ..."), tags vX.Y.Z, and pushes both.
+# The ci.yml workflow then runs on the tag push and publishes the
+# matching multi-arch image tags (:vX.Y.Z, :vX.Y, :vX, :<short-sha>)
+# to GHCR. Release commits themselves are conventional, so ci's
+# :main/:latest/:<sha> tags track them too.
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  release:
+    name: semantic-release
+    runs-on: ubuntu-latest
+    steps:
+      # fetch-depth: 0 — full history + tags, because semantic-release
+      # parses commits since the last tag to compute the version bump.
+      # persist-credentials (default) lets the later `git push` of the
+      # release commit + tag authenticate as GITHUB_TOKEN.
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: astral-sh/setup-uv@v4
+        with:
+          version: 0.11.19
+
+      - run: git config user.name "github-actions[bot]"
+      - run: git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - run: uv sync
+      - run: uv run semantic-release version
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

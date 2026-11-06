@@ -33,6 +33,7 @@ dev = [
     "ruff>=0.8",
     "ty>=0.0.1a5",
     "poethepoet>=0.36",
+    "python-semantic-release>=10.7",
 ]
 
 # ---- ruff ----------------------------------------------------------------
@@ -177,3 +178,22 @@ sequence = ["lint-fix", "format"]
 [tool.poe.tasks.lint-fix]
 help = "Lint with auto-fix"
 cmd = "ruff check --fix"
+
+# ---- semantic-release --------------------------------------------------
+[tool.semantic_release]
+# Versioning is driven by conventional commits. The release workflow
+# (.github/workflows/release.yml) runs `semantic-release version` on
+# every push to main: it computes the next version from the commits
+# since the last v*.*.* tag, stamps it into pyproject.toml and
+# CHANGELOG.md, commits ("chore(release): ..."), tags vX.Y.Z, pushes.
+# ci.yml then publishes the matching image tags (:vX.Y.Z, :vX.Y, :vX)
+# to GHCR on the tag push.
+version_toml = ["pyproject.toml:project.version"]
+commit_parser = "conventional"
+tag_format = "v{version}"
+changelog_file = "CHANGELOG.md"
+allow_zero_version = true
+major_on_zero = false
+
+[tool.semantic_release.branches.main]
+match = "main"

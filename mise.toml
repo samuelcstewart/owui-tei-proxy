@@ -1,6 +1,8 @@
 # Project-pinned toolchain. CI installs mise (jdx/mise-action) and reads
-# this file, so the uv version below is the single pin for workflow runs.
-# The Dockerfile pins the uv builder image separately (COPY --from) —
-# keep both on the same version; Renovate groups the two uv pins.
+# this file, so the pins below are the single source for workflow runs.
+# The Dockerfile pins its builder images separately (COPY --from) — keep
+# python aligned with the python:X-slim-bookworm base image and uv with
+# the ghcr.io/astral-sh/uv image; Renovate groups each pair into one PR.
 [tools]
+python = "3.14"
 uv = "0.11.19"

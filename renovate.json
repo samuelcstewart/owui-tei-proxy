@@ -54,9 +54,10 @@
       "groupName": "dev dependencies"
     },
     {
-      "description": "python interpreter: docker python base image + mise python pin aligned in one PR (last \u2014 later rules win)",
+      "description": "python interpreter: docker python base image + mise python pin (mise manager reports depName python/cpython) aligned in one PR (last — later rules win)",
       "matchPackageNames": [
-        "python"
+        "python",
+        "python/cpython"
       ],
       "groupName": "python"
     }

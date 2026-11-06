@@ -1,0 +1,44 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": ["config:recommended"],
+  "prCreation": "immediate",
+  "internalChecksAsSuccess": true,
+  "packageRules": [
+    {
+      "description": "Automerge patch/minor updates once CI passes (no required checks on this repo, so automerge is gated on the PR's own status checks succeeding)",
+      "matchUpdateTypes": ["patch", "minor"],
+      "automerge": true,
+      "automergeType": "pr",
+      "platformAutomerge": true
+    },
+    {
+      "description": "GitHub Actions updates land in one PR",
+      "matchManagers": ["github-actions"],
+      "groupName": "GitHub Actions"
+    },
+    {
+      "description": "uv: mise.toml tool pin + ghcr uv builder image in the Dockerfile bump together",
+      "matchPackageNames": ["uv", "astral-sh/uv", "ghcr.io/astral-sh/uv"],
+      "groupName": "uv"
+    },
+    {
+      "description": "Docker base images and compose images in one PR (excludes uv via the rule above)",
+      "matchManagers": ["dockerfile", "docker-compose"],
+      "matchPackageNames": ["!uv", "!ghcr.io/astral-sh/uv"],
+      "groupName": "Docker images"
+    },
+    {
+      "description": "Dev dependencies (pytest, ruff, ty, poe, semantic-release) in one PR",
+      "matchManagers": ["pep621"],
+      "matchDepTypes": ["dependency-groups"],
+      "groupName": "dev dependencies",
+      "matchUpdateTypes": ["patch", "minor", "major"]
+    },
+    {
+      "description": "Runtime Python deps stay individual — they affect the published image",
+      "matchManagers": ["pep621"],
+      "matchDepTypes": ["project.dependencies", "requires-python"],
+      "automerge": false
+    }
+  ]
+}

@@ -4,5 +4,5 @@
 # python aligned with the python:X-slim-bookworm base image and uv with
 # the ghcr.io/astral-sh/uv image; Renovate groups each pair into one PR.
 [tools]
-python = "3.14"
+python = "3.15.2"
 uv = "0.11.19"

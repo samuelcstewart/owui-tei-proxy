@@ -5,4 +5,4 @@
 # the ghcr.io/astral-sh/uv image; Renovate groups each pair into one PR.
 [tools]
 python = "3.14"
-uv = "0.11.19"
+uv = "0.13.8"
